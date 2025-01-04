@@ -32,8 +32,8 @@
                         type="button" role="tab" aria-controls="about-tab-pane" aria-selected="false">About</button>
                 </li>
             </ul>
-            <form class="search-bar" role="search">
-                <input type="search" placeholder="Search" aria-label="Search">
+            <form id="searchForm" class="search-bar" role="search">
+                <input id="searchBar" type="search" placeholder="Search" aria-label="Search" maxlength="20">
                 <button type="submit">Search</button>
             </form>
         </div>
@@ -46,22 +46,7 @@
             <div class="tab-pane fade show active" id="coins-tab-pane" role="tabpanel" aria-labelledby="coins-tab"
                 tabindex="0">
                 <div id="coins-container">
-                    <div class="card">
-                        <div class="card-body card-flex">
-                            <div class="card-title-container">
-                                <h4 class="card-title">coin id</h4>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
-                                    <label class="form-check-label" for="flexSwitchCheckDefault"></label>
-                                </div>
-                            </div>
-                            <p class="card-text">coin name</p>
-                            <button class="btn btn-primary btn-more-info">more info</button>
-                        </div>
-                    </div>
-
-
-
+                    <!-- Dynamic Coins Will Render Here -->
                 </div>
             </div>
             <div class="tab-pane fade" id="reports-tab-pane" role="tabpanel" aria-labelledby="reports-tab" tabindex="0">
@@ -69,6 +54,29 @@
             </div>
             <div class="tab-pane fade" id="about-tab-pane" role="tabpanel" aria-labelledby="about-tab" tabindex="0">
                 This is the about page
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="replaceCoinModal" tabindex="-1" aria-labelledby="replaceCoinModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="replaceCoinModalLabel">Replace a Coin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>You have already selected 5 coins. Please replace one of them:</p>
+                    <ul id="selectedCoinsList" class="list-group">
+                        <!-- Dynamic list of selected coins -->
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="cancelReplace" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                </div>
             </div>
         </div>
     </div>
