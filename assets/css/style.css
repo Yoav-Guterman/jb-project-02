@@ -1,0 +1,208 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.main-container {
+    padding: 16px;
+
+}
+
+/* Navigation and Search Bar */
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 8px;
+}
+
+.nav-tabs {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-tabs li {
+    margin-right: 16px;
+}
+
+.nav-link {
+    background: none;
+    border: none;
+    font-size: 16px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.nav-link:hover {
+    background-color: #f0f0f0;
+}
+
+.nav-link.active {
+    border-bottom: 2px solid #007bff;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+}
+
+.search-bar input {
+    padding: 8px;
+    font-size: 16px;
+    margin-right: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.search-bar button {
+    padding: 8px 12px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.search-bar button:hover {
+    background-color: #0056b3;
+}
+
+/* Title */
+.title {
+    text-align: center;
+    margin: 16px 0;
+    font-size: 24px;
+}
+
+/* Tab Content */
+.tab-content {
+    margin-top: 16px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.card {
+    width: 18rem;
+}
+
+/* Flex container for card title and switch */
+.card-flex {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* Space between card elements */
+}
+
+.card-title-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: bold;
+    /* Adjust font size as needed */
+}
+
+.form-check {
+    margin: 0;
+    padding: 0;
+}
+
+.form-check-input {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+.btn-more-info {
+    width: fit-content;
+    /* Set the button width to 25% of the card */
+    text-align: center;
+    /* Center-align the text */
+}
+
+#coins-container {
+    display: flex;
+    flex-wrap: wrap;
+    overflow-y: auto;
+    justify-content: center;
+    padding-left: 15%;
+    padding-right: 15%;
+}
+
+.card {
+    width: 33%;
+}
+
+/* Media Queries */
+@media screen and (min-width: 1025px) {
+
+    /* Computer */
+    .nav-container {
+        flex-direction: row;
+    }
+}
+
+@media screen and (min-width: 601px) and (max-width: 1024px) {
+
+    /* iPad */
+    .nav-container {
+        flex-direction: row;
+    }
+
+    #coins-container {
+        padding-right: 1rem;
+        padding-left: 1rem;
+
+    }
+}
+
+@media screen and (max-width: 600px) {
+
+    /* Phone */
+    .nav-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .nav-tabs {
+        flex-wrap: wrap;
+    }
+
+    .search-bar {
+        margin-top: 8px;
+        width: 50%;
+        min-width: 250px;
+    }
+
+    .search-bar input {
+        width: 100%;
+    }
+
+    #coins-container {
+        padding-right: 0;
+        padding-left: 0;
+
+    }
+
+    .card {
+        width: 100%;
+    }
+}
