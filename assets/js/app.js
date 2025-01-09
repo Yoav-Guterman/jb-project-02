@@ -1,53 +1,21 @@
 "use strict";
 
 (async () => {
+
+    // small useful utility functions
+    const saveToLocalStorage = (key, data) => localStorage.setItem(key, JSON.stringify(data));
+    const getFromLocalStorage = key => JSON.parse(localStorage.getItem(key));
+
     const getSingleCoin = async coinId => getData(`https://api.coingecko.com/api/v3/coins/${coinId}`);
     const getData = url => fetch(url).then(response => response.json());
 
-    const generateCoins = coins => {
-        return coins
-            .map(
-                coin => `
-                    <div class="card">
-                        <div class="card-body card-flex">
-                            <div class="card-title-container">
-                                <h4 class="card-title">${coin.symbol}</h4>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="${coin.id}Switch">
-                                    <label class="form-check-label" for="flexSwitchCheckDefault"></label>
-                                </div>
-                            </div>
-                            <p class="card-text">${coin.name}</p>
-                            <button id="${coin.id}" type="button" class="btn btn-primary btn-popover">
-                                More Info
-                            </button>
-                        </div>
-                    </div>
-                `
-            )
-            .join("");
-    };
-
-    const generateMoreInfo = singleCoinData => {
-        const coinPriceToUSD = singleCoinData.market_data.current_price.usd;
-        const coinPriceToEUR = singleCoinData.market_data.current_price.eur;
-        const coinPriceToILS = singleCoinData.market_data.current_price.ils;
-        const coinImage = singleCoinData.image.thumb;
-
-        return `
-            <div>
-                <img src="${coinImage}" alt="${singleCoinData.name}" style="width: 50px; height: 50px;">
-                <p>Price in USD: $${coinPriceToUSD}</p>
-                <p>Price in EUR: €${coinPriceToEUR}</p>
-                <p>Price in ILS: ₪${coinPriceToILS}</p>
-            </div>
-        `;
-    };
+    // Store the sixth coin ID for modal interaction (needed global variables)
+    let pendingCoinId = null;
+    let pendingCoinSwitch = null;
 
     const checkCoinInLocalStorage = coinId => {
-        const coinJSON = localStorage.getItem(`${coinId}`)
-        if (coinJSON) {
-            const coinData = JSON.parse(coinJSON)
+        const coinData = getFromLocalStorage(coinId);
+        if (coinData) {
             if (new Date().getTime() < coinData.expiration) {
                 // check if current time is smaller than expiration (means less than 2 minutes)
                 return true
@@ -63,7 +31,7 @@
             value: singleCoinData, // The coin data
             expiration: expirationTime // Expiration timestamp
         };
-        localStorage.setItem(`${singleCoinData.id}`, JSON.stringify(item));
+        saveToLocalStorage(singleCoinData.id, item);
     }
 
     const initializePopovers = () => {
@@ -104,7 +72,6 @@
                             coinData = await getSingleCoin(this.id);
                             popoverContent = generateMoreInfo(coinData);
                             saveCoinInfoToStorage(coinData);
-
                             createPopover(popoverContent, coinData.name);
                         }
                     } catch (error) {
@@ -124,30 +91,15 @@
         });
     };
 
-    const renderCoins = coinsHTML => {
-        document.getElementById("coins-container").innerHTML = coinsHTML;
-        // Initialize popovers for the buttons
-        initializePopovers();
-        // Initialize checkbox for the coins
-        initializeCheckbox();
-        // load the already selected buttons
-        loadSelectedButtons()
-    };
+
 
     const initializeCheckbox = () => {
         // Create all checkbox switches for all the coins
         document.querySelectorAll("#coins-container .form-check-input").forEach(button => {
             button.addEventListener("change", async function () {
                 try {
-                    const selectedCoinsJSON = localStorage.getItem('selectedCoins');
+                    const selectedCoinsArray = getFromLocalStorage('selectedCoins') || [];
                     const coinId = this.id.replace('Switch', ""); // The id of the coin
-
-                    let selectedCoinsArray;
-                    if (!selectedCoinsJSON) {
-                        selectedCoinsArray = [];
-                    } else {
-                        selectedCoinsArray = JSON.parse(selectedCoinsJSON);
-                    }
 
                     if (this.checked === true) {
                         // If checkbox is checked, handle coin selection
@@ -155,7 +107,7 @@
                             // If less than 5 coins, add normally
                             const singleCoinData = await getSingleCoin(coinId);
                             selectedCoinsArray.push(singleCoinData);
-                            localStorage.setItem('selectedCoins', JSON.stringify(selectedCoinsArray));
+                            saveToLocalStorage('selectedCoins', selectedCoinsArray);
                         } else {
                             // If trying to add a 6th coin, show modal
                             await moreThanFiveCoins(coinId, this);
@@ -163,7 +115,7 @@
                     } else {
                         // If unchecking, remove coin from selection
                         const newCoinArray = selectedCoinsArray.filter(coin => coin.id !== coinId);
-                        localStorage.setItem('selectedCoins', JSON.stringify(newCoinArray));
+                        saveToLocalStorage('selectedCoins', newCoinArray);
                     }
                 } catch (e) {
                     console.warn(e);
@@ -173,69 +125,17 @@
         });
     };
 
-    const saveDisplayedCoinsToLocalStorage = displayedCoins => localStorage.setItem('displayedCoins', JSON.stringify(displayedCoins))
-
-
     const loadSelectedButtons = () => {
-        const selectedCoinsJSON = localStorage.getItem('selectedCoins')
-        let SelectedCoinsArray;
-        if (!selectedCoinsJSON) {
-            SelectedCoinsArray = []
-        } else {
-            SelectedCoinsArray = JSON.parse(selectedCoinsJSON)
-        }
-        SelectedCoinsArray.forEach(coin => {
+        const selectedCoinsArray = getFromLocalStorage('selectedCoins') || [];
+        selectedCoinsArray.forEach(coin => {
             const checkbox = document.getElementById(`${coin.id + 'Switch'}`); // Get the checkbox element
             if (checkbox) {
                 checkbox.checked = true; // Set the checkbox to checked
             }
-            console.log(`${coin.id + 'Switch'}`); // Debugging log
         });
     }
 
-    // MAIN FUNCTION
-    const onload = async () => {
-        try {
-            // Fetch and filter coins data
-            const allCoinsData = await getData("https://api.coingecko.com/api/v3/coins/list");
-            const getFirst100CoinsData = allCoinsData.slice(0, 100);
-            // save the displayed coin to local storage
-            saveDisplayedCoinsToLocalStorage(getFirst100CoinsData)
 
-            // Generate HTML for coins
-            const coinsHTML = generateCoins(getFirst100CoinsData);
-
-            // Render coins
-            renderCoins(coinsHTML);
-
-        } catch (e) {
-            console.warn(e);
-        }
-    };
-
-    document.getElementById('searchForm').addEventListener('submit', async (event) => {
-        event.preventDefault()
-        const coinSearch = document.getElementById('searchBar').value
-        const allCoinsData = await getData("https://api.coingecko.com/api/v3/coins/list")
-        const getFirstSearched100CoinsData = allCoinsData.filter(coin => coin.name.includes(coinSearch)).splice(0, 100)
-        // save the displayed coin to local storage
-        saveDisplayedCoinsToLocalStorage(getFirstSearched100CoinsData)
-        const coinsSearchedHTML = generateCoins(getFirstSearched100CoinsData)
-
-        renderCoins(coinsSearchedHTML);
-    })
-
-    onload();
-
-    // Store the sixth coin ID for modal interaction
-    let pendingCoinId = null;
-    let pendingCoinSwitch = null;
-
-    const getSixthCoinBasicStats = coinId => {
-        const displayedCoinsJSON = localStorage.getItem('displayedCoins');
-        const displayedCoins = JSON.parse(displayedCoinsJSON);
-        return displayedCoins.find(coin => coin.id === coinId);
-    }
 
     const moreThanFiveCoins = async (coinId, switchElement) => {
         pendingCoinId = coinId;
@@ -243,11 +143,11 @@
 
         try {
             // Get currently selected coins from localStorage
-            const selectedCoinsJSON = localStorage.getItem('selectedCoins');
-            const selectedCoins = JSON.parse(selectedCoinsJSON);
+            const selectedCoins = getFromLocalStorage('selectedCoins') || [];
 
             // Get the displayed coins from localStorage to find the sixth coin's symbol
-            const sixthCoin = getSixthCoinBasicStats(coinId)
+            const displayedCoins = getFromLocalStorage('displayedCoins');
+            const sixthCoin = displayedCoins.find(coin => coin.id === coinId);
 
             // Update modal title with sixth coin information
             const modalTitle = document.getElementById('replaceCoinModalLabel');
@@ -293,18 +193,17 @@
     const handleCoinReplacement = async (coinToReplaceId) => {
         try {
             // Get current selected coins
-            const selectedCoinsJSON = localStorage.getItem('selectedCoins');
-            let selectedCoins = JSON.parse(selectedCoinsJSON);
+            const selectedCoins = getFromLocalStorage('selectedCoins') || [];
 
             // Remove the coin to be replaced
-            selectedCoins = selectedCoins.filter(coin => coin.id !== coinToReplaceId);
+            const updatedSelectedCoins = selectedCoins.filter(coin => coin.id !== coinToReplaceId);
 
             // Get the new coin's data and add it
             const newCoinData = await getSingleCoin(pendingCoinId);
-            selectedCoins.push(newCoinData);
+            updatedSelectedCoins.push(newCoinData);
 
             // Update localStorage
-            localStorage.setItem('selectedCoins', JSON.stringify(selectedCoins));
+            saveToLocalStorage('selectedCoins', updatedSelectedCoins);
 
             // Update UI switches
             const replacedCoinSwitch = document.getElementById(`${coinToReplaceId}Switch`);
@@ -331,4 +230,92 @@
         pendingCoinId = null;
         pendingCoinSwitch = null;
     };
+
+    const renderCoins = coinsHTML => {
+        document.getElementById("coins-container").innerHTML = coinsHTML;
+        // Initialize popovers for the buttons
+        initializePopovers();
+        // Initialize checkbox for the coins
+        initializeCheckbox();
+        // load the already selected buttons
+        loadSelectedButtons()
+    };
+
+    const generateMoreInfo = singleCoinData => {
+        const coinPriceToUSD = singleCoinData.market_data.current_price.usd;
+        const coinPriceToEUR = singleCoinData.market_data.current_price.eur;
+        const coinPriceToILS = singleCoinData.market_data.current_price.ils;
+        const coinImage = singleCoinData.image.thumb;
+
+        return `
+            <div>
+                <img src="${coinImage}" alt="${singleCoinData.name}" style="width: 50px; height: 50px;">
+                <p>Price in USD: $${coinPriceToUSD}</p>
+                <p>Price in EUR: €${coinPriceToEUR}</p>
+                <p>Price in ILS: ₪${coinPriceToILS}</p>
+            </div>
+        `;
+    };
+
+    const generateCoins = coins => {
+        return coins
+            .map(
+                coin => `
+                    <div class="card">
+                        <div class="card-body card-flex">
+                            <div class="card-title-container">
+                                <h4 class="card-title">${coin.symbol}</h4>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="${coin.id}Switch">
+                                    <label class="form-check-label" for="flexSwitchCheckDefault"></label>
+                                </div>
+                            </div>
+                            <p class="card-text">${coin.name}</p>
+                            <button id="${coin.id}" type="button" class="btn btn-primary btn-popover">
+                                More Info
+                            </button>
+                        </div>
+                    </div>
+                `
+            )
+            .join("");
+    };
+
+    // Update the search form event listener
+    document.getElementById('searchForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const coinSearch = document.getElementById('searchBar').value.toLowerCase();
+
+        const allCoinsData = getFromLocalStorage('allCoins');
+        const getFirstSearched100CoinsData = allCoinsData
+            .filter(coin =>
+                coin.name.toLowerCase().includes(coinSearch) ||
+                coin.symbol.toLowerCase().includes(coinSearch)
+            )
+            .slice(0, 100);
+
+        saveToLocalStorage('displayedCoins', getFirstSearched100CoinsData);
+        const coinsSearchedHTML = generateCoins(getFirstSearched100CoinsData);
+        renderCoins(coinsSearchedHTML);
+    });
+
+    // onLoad FUNCTION
+    const onload = async () => {
+        try {
+            // Fetch and store all coins on each load
+            const allCoinsData = await getData("https://api.coingecko.com/api/v3/coins/list");
+            const getFirst100CoinsData = allCoinsData.slice(0, 100);
+
+            // Save both to localStorage using the new function
+            saveToLocalStorage('allCoins', allCoinsData);
+            saveToLocalStorage('displayedCoins', getFirst100CoinsData);
+
+            const coinsHTML = generateCoins(getFirst100CoinsData);
+            renderCoins(coinsHTML);
+        } catch (e) {
+            console.warn(e);
+        }
+    };
+
+    onload();
 })();
