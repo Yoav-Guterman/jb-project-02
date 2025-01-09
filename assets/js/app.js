@@ -96,30 +96,26 @@
     const initializeCheckbox = () => {
         // Create all checkbox switches for all the coins
         document.querySelectorAll("#coins-container .form-check-input").forEach(button => {
-            button.addEventListener("change", async function () {
-                try {
-                    const selectedCoinsArray = getFromLocalStorage('selectedCoins') || [];
-                    const coinId = this.id.replace('Switch', ""); // The id of the coin
+            button.addEventListener("change", function () {
+                const selectedCoinsArray = getFromLocalStorage('selectedCoins') || [];
+                const coinId = this.id.replace('Switch', ""); // The id of the coin
 
-                    if (this.checked === true) {
-                        // If checkbox is checked, handle coin selection
-                        if (selectedCoinsArray.length < 5) {
-                            // If less than 5 coins, add normally
-                            const singleCoinData = await getSingleCoin(coinId);
-                            selectedCoinsArray.push(singleCoinData);
-                            saveToLocalStorage('selectedCoins', selectedCoinsArray);
-                        } else {
-                            // If trying to add a 6th coin, show modal
-                            await moreThanFiveCoins(coinId, this);
-                        }
+                if (this.checked === true) {
+                    // If checkbox is checked, handle coin selection
+                    if (selectedCoinsArray.length < 5) {
+                        // If less than 5 coins, add normally
+                        const allCoins = getFromLocalStorage('allCoins');
+                        const singleCoinData = allCoins.find(coin => coinId === coin.id);
+                        selectedCoinsArray.push(singleCoinData);
+                        saveToLocalStorage('selectedCoins', selectedCoinsArray);
                     } else {
-                        // If unchecking, remove coin from selection
-                        const newCoinArray = selectedCoinsArray.filter(coin => coin.id !== coinId);
-                        saveToLocalStorage('selectedCoins', newCoinArray);
+                        // If trying to add a 6th coin, show modal
+                        moreThanFiveCoins(coinId, this);
                     }
-                } catch (e) {
-                    console.warn(e);
-                    this.checked = false; // Reset switch if error occurs
+                } else {
+                    // If unchecking, remove coin from selection
+                    const newCoinArray = selectedCoinsArray.filter(coin => coin.id !== coinId);
+                    saveToLocalStorage('selectedCoins', newCoinArray);
                 }
             });
         });
@@ -135,8 +131,32 @@
         });
     }
 
+    const handleCoinReplacement = (coinToReplaceId) => {
+        // Get current selected coins
+        const selectedCoins = getFromLocalStorage('selectedCoins') || [];
+        // Remove the coin to be replaced
+        const updatedSelectedCoins = selectedCoins.filter(coin => coin.id !== coinToReplaceId);
 
+        // Get the new coin's data and add it
+        const allCoins = getFromLocalStorage('allCoins');
+        const newCoinData = allCoins.find(coin => coin.id === pendingCoinId);
+        updatedSelectedCoins.push(newCoinData);
 
+        // Update localStorage
+        saveToLocalStorage('selectedCoins', updatedSelectedCoins);
+
+        // Update UI switches
+        const replacedCoinSwitch = document.getElementById(`${coinToReplaceId}Switch`);
+        if (replacedCoinSwitch) {
+            replacedCoinSwitch.checked = false;
+        }
+
+        // Reset pending coin data
+        pendingCoinId = null;
+        pendingCoinSwitch = null;
+    };
+
+    // this function is async because of the bootstrap modal
     const moreThanFiveCoins = async (coinId, switchElement) => {
         pendingCoinId = coinId;
         pendingCoinSwitch = switchElement;
@@ -145,9 +165,9 @@
             // Get currently selected coins from localStorage
             const selectedCoins = getFromLocalStorage('selectedCoins') || [];
 
-            // Get the displayed coins from localStorage to find the sixth coin's symbol
-            const displayedCoins = getFromLocalStorage('displayedCoins');
-            const sixthCoin = displayedCoins.find(coin => coin.id === coinId);
+            // Get all coins from localStorage to find the sixth coin's symbol
+            const allCoins = getFromLocalStorage('allCoins');
+            const sixthCoin = allCoins.find(coin => coin.id === coinId);
 
             // Update modal title with sixth coin information
             const modalTitle = document.getElementById('replaceCoinModalLabel');
@@ -170,9 +190,9 @@
 
             // Add event listeners for replace buttons
             document.querySelectorAll('.replace-coin-btn').forEach(button => {
-                button.addEventListener('click', async function () {
+                button.addEventListener('click', function () {
                     const coinToReplaceId = this.getAttribute('data-coin-id');
-                    await handleCoinReplacement(coinToReplaceId);
+                    handleCoinReplacement(coinToReplaceId);
                     modal.hide();
                 });
             });
@@ -190,38 +210,6 @@
         }
     };
 
-    const handleCoinReplacement = async (coinToReplaceId) => {
-        try {
-            // Get current selected coins
-            const selectedCoins = getFromLocalStorage('selectedCoins') || [];
-
-            // Remove the coin to be replaced
-            const updatedSelectedCoins = selectedCoins.filter(coin => coin.id !== coinToReplaceId);
-
-            // Get the new coin's data and add it
-            const newCoinData = await getSingleCoin(pendingCoinId);
-            updatedSelectedCoins.push(newCoinData);
-
-            // Update localStorage
-            saveToLocalStorage('selectedCoins', updatedSelectedCoins);
-
-            // Update UI switches
-            const replacedCoinSwitch = document.getElementById(`${coinToReplaceId}Switch`);
-            if (replacedCoinSwitch) {
-                replacedCoinSwitch.checked = false;
-            }
-
-            // Reset pending coin data
-            pendingCoinId = null;
-            pendingCoinSwitch = null;
-
-        } catch (error) {
-            console.error('Error in handleCoinReplacement:', error);
-            if (pendingCoinSwitch) {
-                pendingCoinSwitch.checked = false;
-            }
-        }
-    };
 
     const handleModalClose = () => {
         if (pendingCoinSwitch) {
