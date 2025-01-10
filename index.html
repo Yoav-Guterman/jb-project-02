@@ -9,6 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
+
     <link rel="stylesheet" href="assets/css/style.css">
     <script defer src="assets/js/app.js"></script>
     <title>Crypto World App</title>
@@ -50,7 +53,9 @@
                 </div>
             </div>
             <div class="tab-pane fade" id="reports-tab-pane" role="tabpanel" aria-labelledby="reports-tab" tabindex="0">
-                This is the reports page
+                <div id="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
             </div>
             <div class="tab-pane fade" id="about-tab-pane" role="tabpanel" aria-labelledby="about-tab" tabindex="0">
                 This is the about page

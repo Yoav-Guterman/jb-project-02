@@ -327,4 +327,91 @@
     };
 
     onload();
+
+    // the report tab
+    let priceChart = null;
+    let chartInterval = null;
+
+    const createPriceChart = () => {
+        const selectedCoins = getFromLocalStorage('selectedCoins') || [];
+        const colors = ['red', 'blue', 'green', 'purple', 'orange'];
+
+        const datasets = selectedCoins.map((coin, index) => ({
+            label: coin.symbol.toUpperCase(),
+            data: [],
+            borderColor: colors[index],
+            fill: false
+        }));
+
+        // activates charts.js to draw the graph
+        const ctx = document.getElementById('priceChart').getContext('2d');
+
+        // Destroy existing chart if exists to prevent duplicates
+        if (priceChart) priceChart.destroy();
+
+        priceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                animation: false
+            }
+        });
+    };
+
+    const updatePrices = async () => {
+        const selectedCoins = getFromLocalStorage('selectedCoins') || [];
+        if (selectedCoins.length === 0) return;
+
+        const symbols = selectedCoins.map(coin => coin.symbol.toUpperCase()).join(',');
+        try {
+            const response = await fetch(`https://min-api.cryptocompare.com/data/pricemulti?fsyms=${symbols}&tsyms=USD`);
+            const prices = await response.json();
+
+            // Add new timestamp
+            priceChart.data.labels.push(new Date().toLocaleTimeString());
+
+            // Add new prices
+            priceChart.data.datasets.forEach(dataset => {
+                const price = prices[dataset.label]?.USD || 0;
+                dataset.data.push(price);
+            });
+
+            // Keep only last 10 points
+            if (priceChart.data.labels.length > 10) {
+                priceChart.data.labels.shift();
+                priceChart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+
+            priceChart.update();
+        } catch (error) {
+            console.error('Error fetching prices:', error);
+        }
+    };
+
+    // Initialize graph when Reports tab is clicked
+    document.getElementById('reports-tab').addEventListener('click', () => {
+        createPriceChart();
+        // Clear existing interval if any
+        if (chartInterval) clearInterval(chartInterval);
+        // Start new update interval
+        chartInterval = setInterval(updatePrices, 2000);
+        // Initial price update
+        updatePrices();
+    });
+
+    // Clean up when leaving Reports tab
+    document.getElementById('reports-tab').addEventListener('hide.bs.tab', () => {
+        if (chartInterval) {
+            clearInterval(chartInterval);
+            chartInterval = null;
+        }
+    });
 })();
