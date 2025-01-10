@@ -414,4 +414,30 @@
             chartInterval = null;
         }
     });
+
+    // the about pane
+    document.getElementById('about-me').innerHTML = `
+    My name is Yoav Guterman, and I am 22 years old from Herzliya.<br>
+I finished my army service a few months ago, serving nearly four years in the military as a combat intelligence officer.<br>
+After completing my service, I traveled the world for a few weeks. Following that,<br>
+I began searching for something more meaningful and decided to learn coding.<br>
+I enrolled in a course at John Bryce to help me enter the world of web development.<br><br>
+
+This is my second project in the course.<br>
+The project is about cryptocurrency coins. <br>
+The cryptocurrency API includes over 16,000 coins and allows you to search for specific coins, <br>
+view their prices in USD, EUR, and ILS, and see their images.<br><br>
+
+You can also use the switchbox to navigate to the report pane,<br>
+where you can view a real-time graph of the coin's performance.<br>
+The graph supports up to five coins displayed simultaneously.<br>
+
+I learned a lot while working on this project, although I found it challenging to manage over 400 lines of code.<br>
+At times, I got lost in the code and had to pause to regain my bearings.<br>
+
+I hope to continue learning more modern and efficient ways to handle projects like this in the future:)<br><br>
+    
+    this is me:<br>
+    <img src="assets/pictures/me.jpg"></img>
+    `
 })();

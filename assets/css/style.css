@@ -168,6 +168,10 @@ input[type="search"]::-webkit-search-cancel-button {
     text-align: center;
 }
 
+#about-container img {
+    height: 200px;
+}
+
 /* Media Queries */
 @media screen and (min-width: 1025px) {
 
