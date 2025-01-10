@@ -9,6 +9,10 @@
     const getSingleCoin = async coinId => getData(`https://api.coingecko.com/api/v3/coins/${coinId}`);
     const getData = url => fetch(url).then(response => response.json());
 
+    // loader functions
+    const showLoader = () => document.getElementById('loader').style.display = 'block';
+    const hideLoader = () => document.getElementById('loader').style.display = 'none';
+
     // Store the sixth coin ID for modal interaction (needed global variables)
     let pendingCoinId = null;
     let pendingCoinSwitch = null;
@@ -44,6 +48,7 @@
                     // If popover exists, dispose it
                     popoverInstance.dispose();
                 } else {
+                    showLoader();
                     try {
                         let popoverContent;
                         let coinData;
@@ -86,6 +91,7 @@
                         });
                         errorPopover.show();
                     }
+                    hideLoader();
                 }
             });
         });
@@ -270,7 +276,7 @@
     };
 
     // Update the search form event listener
-    document.getElementById('searchForm').addEventListener('submit', async (event) => {
+    document.getElementById('searchForm').addEventListener('submit', (event) => {
         event.preventDefault();
         const coinSearch = document.getElementById('searchBar').value.toLowerCase();
 
@@ -287,8 +293,19 @@
         renderCoins(coinsSearchedHTML);
     });
 
+    const showError = () => {
+        document.getElementById('coins-container').innerHTML = `
+            <div class="alert alert-danger text-center">
+                Sorry, please try again later
+                <br>
+                <small>Attempting to reconnect...</small>
+            </div>
+        `;
+    };
+
     // onLoad FUNCTION
     const onload = async () => {
+        showLoader();
         try {
             // Fetch and store all coins on each load
             const allCoinsData = await getData("https://api.coingecko.com/api/v3/coins/list");
@@ -297,12 +314,16 @@
             // Save both to localStorage using the new function
             saveToLocalStorage('allCoins', allCoinsData);
             saveToLocalStorage('displayedCoins', getFirst100CoinsData);
-
             const coinsHTML = generateCoins(getFirst100CoinsData);
             renderCoins(coinsHTML);
+            // only hides on success
+            hideLoader();
         } catch (e) {
             console.warn(e);
+            showError();
+            setTimeout(onload, 5000);
         }
+
     };
 
     onload();
